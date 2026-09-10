@@ -6,13 +6,15 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
+
+// Sirve todos los archivos de la carpeta public (HTML, CSS, JS, imágenes)
 app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 
 const getInitialData = () => ({
   config: {
-    storeTitle: "TOLETUM BIKE LIFE",
+    storeTitle: "TOLETUM BIKELIFE",
     subtitle: "Streetwear & Urban Culture | Toledo",
     bgColor: "#090a0f",
     panelColor: "#12141d",
@@ -51,12 +53,11 @@ if (!fs.existsSync(DATA_FILE)) {
 const readData = () => JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
 const writeData = (data) => fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 
-// Obtener todo el contenido dinámico
+// API Endpoints
 app.get('/api/content', (req, res) => {
   res.json(readData());
 });
 
-// Guardar configuración general (Textos, Colores, TikToks, Logo)
 app.post('/api/config', (req, res) => {
   const { password, config, tiktokEmbeds } = req.body;
   if (password !== 'admin123') {
@@ -66,10 +67,9 @@ app.post('/api/config', (req, res) => {
   if (config) data.config = { ...data.config, ...config };
   if (tiktokEmbeds) data.tiktokEmbeds = tiktokEmbeds;
   writeData(data);
-  res.json({ success: true, message: 'Configuración y estética actualizadas' });
+  res.json({ success: true, message: 'Configuración actualizada correctamente' });
 });
 
-// Gestión de productos (Añadir)
 app.post('/api/products', (req, res) => {
   const { password, product } = req.body;
   if (password !== 'admin123') return res.status(401).json({ error: 'Contraseña incorrecta' });
@@ -78,10 +78,9 @@ app.post('/api/products', (req, res) => {
   const newProd = { id: Date.now(), ...product };
   data.products.push(newProd);
   writeData(data);
-  res.json({ success: true, message: 'Producto añadido correctamente' });
+  res.json({ success: true, message: 'Producto añadido al catálogo' });
 });
 
-// Gestión de productos (Eliminar)
 app.delete('/api/products/:id', (req, res) => {
   const { password } = req.body;
   if (password !== 'admin123') return res.status(401).json({ error: 'Contraseña incorrecta' });
@@ -92,7 +91,6 @@ app.delete('/api/products/:id', (req, res) => {
   res.json({ success: true, message: 'Producto eliminado' });
 });
 
-// Registrar nuevo pedido desde la web
 app.post('/api/orders', (req, res) => {
   const data = readData();
   const newOrder = {
@@ -106,10 +104,20 @@ app.post('/api/orders', (req, res) => {
   res.json({ success: true, orderId: newOrder.id });
 });
 
+// Rutas explícitas para el Panel Admin
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Ruta por defecto para la tienda
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor activo en el puerto ${PORT}`);
+  console.log(`Servidor de Toletum Bikelife ejecutándose en el puerto ${PORT}`);
 });
