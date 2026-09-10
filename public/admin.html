@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | Toletum Bike Life</title>
+  <style>
+    body { background-color: #0d0f17; color: white; font-family: sans-serif; padding: 20px; }
+    .panel { max-width: 600px; margin: 0 auto; background: #161925; padding: 25px; border-radius: 8px; border: 1px solid #333; }
+    h1 { text-align: center; color: #00d2ff; margin-bottom: 20px; }
+    label { display: block; margin-top: 15px; font-weight: bold; margin-bottom: 5px; }
+    input, textarea { width: 100%; padding: 10px; background: #090a0f; border: 1px solid #444; color: white; border-radius: 4px; }
+    button { margin-top: 20px; width: 100%; padding: 12px; background: #ff0055; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
+    #status { margin-top: 15px; text-align: center; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="panel">
+    <h1>Panel de Control</h1>
+    
+    <label>Contraseña Administrador</label>
+    <input type="password" id="password" placeholder="Introduce clave">
+
+    <label>Título de la Web</label>
+    <input type="text" id="storeTitle">
+
+    <label>Subtítulo / Eslogan</label>
+    <input type="text" id="subtitle">
+
+    <label>Enlaces Embed de TikTok (separados por coma)</label>
+    <textarea id="tiktokEmbeds" rows="4" placeholder="Ej: https://www.tiktok.com/embed/123456789"></textarea>
+
+    <button onclick="saveChanges()">Guardar Cambios</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    async function loadCurrent() {
+      const res = await fetch('/api/content');
+      const data = await res.json();
+      document.getElementById('storeTitle').value = data.storeTitle;
+      document.getElementById('subtitle').value = data.subtitle;
+      document.getElementById('tiktokEmbeds').value = data.tiktokEmbeds.join(', ');
+    }
+
+    async function saveChanges() {
+      const password = document.getElementById('password').value;
+      const storeTitle = document.getElementById('storeTitle').value;
+      const subtitle = document.getElementById('subtitle').value;
+      const tiktokEmbeds = document.getElementById('tiktokEmbeds').value.split(',').map(s => s.trim());
+
+      const status = document.getElementById('status');
+      status.style.color = 'yellow';
+      status.innerText = 'Guardando...';
+
+      const res = await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, storeTitle, subtitle, tiktokEmbeds })
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        status.style.color = '#00ff88';
+        status.innerText = result.message;
+      } else {
+        status.style.color = '#ff0055';
+        status.innerText = result.error || 'Error al guardar';
+      }
+    }
+
+    loadCurrent();
+  </script>
+</body>
+</html>
